@@ -1,5 +1,6 @@
-# StickyableBehavior - packaged as a CakePHP Plugin
+# StickyableBehavior
 
+*packaged as a CakePHP Plugin for convenience*
 
 ## Install
 
@@ -35,33 +36,38 @@ So in this example, you could eaisly just pass in all of these details via find
 But lets assume that the logic is broken up into sub-functions in a variety of
 places (on the model, on the controller, in a Behavior... wherever)
 
-    $this->Post->recursive = -1;
+Find out more on the [Unit
+Tests](https://github.com/zeroasterisk/Sticky-CakePHP-Plugin/blob/master/Test/Case/Model/Behavior/StickyableBehaviorTest.php)
+
+    // find all Articles on which I have commented
+    //   we setup a hasOne() for MyComment (allowing a simple inner join)
+    //   we setup a Sticky Contain with conditions
+    $this->Article->recursive = -1;
     ... some sort of logic ...
-    $this->Post->addStickyContain(array(
-      'Comment' => array(
-        'conditions' => array('created >' => date('Y-m-d', strtotime('yesterday')))
-      ),
-      'Author' => array('id', 'name', 'email'),
+    // add a sticky contains
+    $this->Article->addStickyContain(array(
+        'MyComment' => array(
+            'fields' => array('id', 'created'),
+            'conditions' => array(
+                'MyComment.user_id' => 2
+            )
+        ),
     ));
     ... some sort of logic ...
-    $this->Post->addStickyContain(array(
-      'Author' => array(
-        'fields' => array('id', 'name', 'email'),
-        'conditions' => array('email LIKE' => 'someone%'),
-      )
-    ));
-
-    $postsWithRecentComments = $this->Post->find('count', array(
-      'contain' => array(),
-      'conditions' => array('Author.is_active' => true),
-    ));
-    $postsWithRecentComments = $this->Post->find('all', array(
-      'contain' => array(),
-      'conditions' => array('Author.is_active' => true),
-      'limit' => 5,
-    ));
-
-
+    // prep options for a find requiring the sticky contains
+    $options = array(
+        'fields' => array('id', 'title'),
+        'conditions' => array(
+            'NOT' => array(
+                'MyComment.id' => NULL
+            ),
+        ),
+    );
+    $articlesWhichIHaveCommentedOn = $this->Article->find('all', $options),
+    // works on multiple queries
+    $articlesWhichIHaveCommentedOn = $this->Article->find('all', $options),
+    // works on multiple queries of different types too
+    $howMany = $this->Article->find('count', $options),
 
 ## Why / Background
 
@@ -79,6 +85,14 @@ of the subsequent `find()` - but there was no way to do so.
 I could use the `$Model->contain()` but that resets all the contains, and it
 only lasts for the "next" query, not all times these conditions might be used
 (pagination requires 2 finds).
+
+## Performance (Joins are better then Subqueries)
+
+Also, while I could accomplish much of what I wanted with subqueries, sadly the
+performance of subqueries in MySQL is poor as compared with inner joins...
+
+Therefore, setting up a "sticky" join becomes important...
+it allows us to search within a `hasMany` association, easily and quickly.
 
 ## Attribution
 
