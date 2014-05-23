@@ -148,7 +148,7 @@ class StickyableBehaviorTest extends CakeTestCase {
 				"'SQLSTATE[42S22]: Column not found: 1054 Unknown column 'MyComment.id' in 'where clause'"
 			);
 		} catch (Exception $e) {
-			$this->assertPattern("#.*Unknown column 'MyComment.id' .*#", $e->getMessage());
+			$this->assertPattern("#Unknown column 'MyComment\.id' #", $e->getMessage());
 		}
 	}
 
