@@ -74,13 +74,15 @@ class StickyableBehavior extends ModelBehavior {
 		if (isset($query['contain']) && $query['contain'] === false) {
 			return $query;
 		}
-		if (empty($query['contain'])) {
-			$query['contain'] = [];
+
+		$stickyContain = $this->getStickyContain($Model);
+		if (!empty($stickyContain)) {
+			$query['contain'] = array_merge(
+				$stickyContain,
+				!empty($query['contain']) ? (array)$query['contain'] : []
+			);
 		}
-		$query['contain'] = array_merge(
-			$this->getStickyContain($Model),
-			(array)$query['contain']
-		);
+
 		return $query;
 	}
 
